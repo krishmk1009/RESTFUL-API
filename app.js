@@ -31,8 +31,7 @@ const articleSchema = {
 
 const Article = mongoose.model("Article", articleSchema);
 
-
-app.get('/articles', (req, res) => {
+app.route('/articles').get((req, res) => {
     Article.find((err, foundArticle) => {
         if (!err) {
 
@@ -42,13 +41,8 @@ app.get('/articles', (req, res) => {
             res.send(err);
         }
     })
-})
+}).post((req, res) => {
 
-app.post('/articles', (req, res) => {
-    // let title = req.body.title;
-    // let content = req.body.content;
-    // res.send(title)
-    // res.send(content);
 
     var article1 = new Article({ title: req.body.title, content: req.body.content });
 
@@ -60,9 +54,7 @@ app.post('/articles', (req, res) => {
             res.send("succesfully added the document")
         }
     })
-})
-
-app.delete('/articles', (req, res) => {
+}).delete((req, res) => {
     Article.deleteMany({}, (err) => {
         if (!err) {
             console.log("deleted succesfully");
@@ -71,7 +63,67 @@ app.delete('/articles', (req, res) => {
         }
         console.log(err);
     })
-})
+});
+
+
+
+app.route('/articles/:articleTitle')
+    .get((req, res) => {
+        Article.findOne({ title: req.params.articleTitle }, (err, foundArticle) => {
+            if (foundArticle) {
+                res.send(foundArticle)
+            }
+            else {
+                res.send("no article found")
+            }
+        });
+    })
+    .put(function (req, res) {
+
+        const articleTitle = req.params.articleTitle;
+
+        Article.updateOne(
+            { title: articleTitle },
+            { content: req.body.newContent },
+            { overwrite: true },
+            function (err) {
+                if (!err) {
+                    res.send("Successfully updated the content of the selected article.");
+                } else {
+                    res.send(err);
+                }
+            });
+    })
+    .patch((req, res) => {
+        Article.updateOne(
+            { title: req.params.articleTitle },
+            { $set: req.body },
+            (err) => {
+                if (!err) {
+                    res.send("succesfully updated")
+                }
+                else {
+                    res.send(err)
+                }
+            }
+        )
+    })
+    .delete((req, res) => {
+        Article.deleteOne(
+            { title: req.params.articleTitle },
+            (err) => {
+                if (!err) {
+                    res.send("succesfully deleted")
+                }
+                else {
+                    res.send(err)
+                }
+            }
+        )
+    })
+
+
+
 app.listen(3000, () => {
     console.log("server started on port 3000")
 })
